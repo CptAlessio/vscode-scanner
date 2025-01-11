@@ -1,0 +1,51 @@
+{
+    "name": "security-scanner",
+    "displayName": "Security Scanner",
+    "description": "Scan code for security patterns",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:security-scanner.scanCode"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "security-scanner.scanCode",
+                "title": "Scan Code"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "security-scanner-sidebar",
+                    "title": "Security Scanner",
+                    "icon": "$(shield)"
+                }
+            ]
+        },
+        "views": {
+            "security-scanner-sidebar": [
+                {
+                    "id": "securityScanner",
+                    "name": "Security Findings"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^14.x.x",
+        "@types/vscode": "^1.60.0",
+        "typescript": "^4.x.x"
+    }
+} 
