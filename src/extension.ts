@@ -3,10 +3,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SecurityTreeProvider, SecurityFinding } from './securityTreeProvider';
 
-// Add this type definition at the top
+/**
+ * Represents a security pattern with a name, regex pattern, and description.
+ */
 interface SecurityPattern {
+    /** The name of the security pattern */
     name: string;
+    /** The regex pattern to match against code */
     pattern: string;
+    /** Description of the security issue and potential remediation */
     description: string;
 }
 
@@ -16,43 +21,61 @@ const highlightDecoration = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
 });
 
+/**
+ * Activates the security scanner extension.
+ * This is the main entry point of the extension that sets up:
+ * - Tree view for security findings
+ * - File opening and highlighting functionality
+ * - Hover provider for security issues
+ * - Code scanning command
+ * 
+ * @param context - The extension context provided by VS Code
+ */
 export function activate(context: vscode.ExtensionContext) {
     const treeProvider = new SecurityTreeProvider();
     vscode.window.registerTreeDataProvider('securityScanner', treeProvider);
 
-    // Register command to open files from tree view
-    context.subscriptions.push(
-        vscode.commands.registerCommand('security-scanner.openFile', (finding: SecurityFinding) => {
-            vscode.workspace.openTextDocument(finding.file).then(doc => {
-                vscode.window.showTextDocument(doc).then(editor => {
-                    // Highlight the line
-                    const range = new vscode.Range(
-                        finding.line - 1, 0,
-                        finding.line - 1, finding.match.length
-                    );
-                    editor.selection = new vscode.Selection(range.start, range.end);
-                    editor.revealRange(range);
+    /**
+     * Opens a file and highlights the line containing a security finding.
+     * Creates a temporary decoration to highlight the vulnerable line and
+     * automatically removes the highlight when the document is closed.
+     * 
+     * @param finding - The security finding to display
+     */
+    vscode.commands.registerCommand('security-scanner.openFile', (finding: SecurityFinding) => {
+        vscode.workspace.openTextDocument(finding.file).then(doc => {
+            vscode.window.showTextDocument(doc).then(editor => {
+                // Highlight the line
+                const range = new vscode.Range(
+                    finding.line - 1, 0,
+                    finding.line - 1, finding.match.length
+                );
+                editor.selection = new vscode.Selection(range.start, range.end);
+                editor.revealRange(range);
 
-                    // Add the decoration to highlight the entire line
-                    const decorationRange = new vscode.Range(
-                        finding.line - 1, 0,
-                        finding.line - 1, Number.MAX_VALUE
-                    );
-                    editor.setDecorations(highlightDecoration, [decorationRange]);
+                // Add the decoration to highlight the entire line
+                const decorationRange = new vscode.Range(
+                    finding.line - 1, 0,
+                    finding.line - 1, Number.MAX_VALUE
+                );
+                editor.setDecorations(highlightDecoration, [decorationRange]);
 
-                    // Remove the decoration when the editor is closed
-                    const disposable = vscode.workspace.onDidCloseTextDocument(closedDoc => {
-                        if (closedDoc.uri.toString() === doc.uri.toString()) {
-                            editor.setDecorations(highlightDecoration, []);
-                            disposable.dispose();
-                        }
-                    });
+                // Remove the decoration when the editor is closed
+                const disposable = vscode.workspace.onDidCloseTextDocument(closedDoc => {
+                    if (closedDoc.uri.toString() === doc.uri.toString()) {
+                        editor.setDecorations(highlightDecoration, []);
+                        disposable.dispose();
+                    }
                 });
             });
-        })
-    );
+        });
+    });
 
-    // Add this new code after treeProvider initialization
+    /**
+     * Provides hover information for security findings.
+     * When hovering over a line with a security issue, displays
+     * the description of the security concern.
+     */
     const hoverProvider = vscode.languages.registerHoverProvider({ scheme: 'file' }, {
         provideHover(document, position, token) {
             // Check if this position matches any of our findings
@@ -73,7 +96,12 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(hoverProvider);
 
-    // Modify the scan command to include descriptions
+    /**
+     * Scans workspace files for security patterns.
+     * Reads patterns and descriptions from configuration files,
+     * searches through all workspace files (excluding node_modules),
+     * and updates the tree view with any findings.
+     */
     let disposable = vscode.commands.registerCommand('security-scanner.scanCode', async () => {
         try {
             // Read patterns and descriptions
@@ -144,6 +172,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
+/**
+ * Handles extension deactivation.
+ * Cleans up resources by disposing the highlight decoration.
+ */
 export function deactivate() {
     // Clean up the decoration type
     highlightDecoration.dispose();
