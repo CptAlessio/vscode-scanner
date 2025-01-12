@@ -1,48 +1,146 @@
 {
-    "name": "security-scanner",
+    "name": "vscode-scanner",
     "displayName": "Security Scanner",
-    "description": "Scan code for security patterns",
+    "description": "Scan code for security patterns and vulnerabilities",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.60.0"
     },
     "categories": [
-        "Other"
+        "Security"
     ],
-    "main": "./out/extension.js",
+    "activationEvents": [
+        "onCommand:security-scanner.scanCode",
+        "onView:securityScanner"
+    ],
+    "main": "./dist/extension.js",
+    "icon": "resources/security-scanner.png",
     "contributes": {
         "commands": [
             {
                 "command": "security-scanner.scanCode",
-                "title": "Scan Code"
+                "title": "Scan Code for Security Issues",
+                "icon": "$(search)"
+            },
+            {
+                "command": "security-scanner.addPattern",
+                "title": "Add Security Pattern",
+                "icon": "$(add)"
+            },
+            {
+                "command": "security-scanner.editPattern",
+                "title": "Edit Security Pattern",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "security-scanner.removePattern",
+                "title": "Remove Security Pattern",
+                "icon": "$(trash)"
             }
         ],
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "security-scanner-sidebar",
+                    "id": "security-scanner",
                     "title": "Security Scanner",
                     "icon": "$(shield)"
                 }
             ]
         },
         "views": {
-            "security-scanner-sidebar": [
+            "security-scanner": [
                 {
                     "id": "securityScanner",
-                    "name": "Security Findings"
+                    "name": "Security Findings",
+                    "icon": "$(shield)",
+                    "contextualTitle": "Security Scanner",
+                    "type": "tree"
                 }
             ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "security-scanner.scanCode",
+                    "when": "view == securityScanner",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "security-scanner.addPattern",
+                    "when": "view == securityScanner",
+                    "group": "navigation@2"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "security-scanner.editPattern",
+                    "when": "view == securityScanner && viewItem == pattern",
+                    "group": "inline"
+                },
+                {
+                    "command": "security-scanner.removePattern",
+                    "when": "view == securityScanner && viewItem == pattern",
+                    "group": "inline"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Security Scanner",
+            "properties": {
+                "securityScanner.patterns": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Security patterns to scan for",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "name",
+                            "pattern",
+                            "description"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the security pattern"
+                            },
+                            "pattern": {
+                                "type": "string",
+                                "description": "Regular expression pattern to match"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Description of the security issue and remediation"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./"
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
-        "@types/node": "^14.x.x",
         "@types/vscode": "^1.60.0",
-        "typescript": "^4.x.x"
+        "@types/node": "^14.x.x",
+        "@types/mocha": "^8.2.2",
+        "@typescript-eslint/eslint-plugin": "^4.26.0",
+        "@typescript-eslint/parser": "^4.26.0",
+        "eslint": "^7.27.0",
+        "glob": "^7.1.7",
+        "mocha": "^8.4.0",
+        "typescript": "^4.3.2",
+        "vscode-test": "^1.5.2",
+        "webpack": "^5.x.x",
+        "webpack-cli": "^4.x.x",
+        "ts-loader": "^9.x.x"
     }
-} 
+}

@@ -1,1 +1,0 @@
-Password Detected=Potentially hardcoded password or credential detected. Storing passwords directly in code is a security risk. Consider using environment variables or a secure credential manager instead. 

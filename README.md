@@ -32,5 +32,7 @@ A Visual Studio Code extension that scans your codebase for potential security i
 
 ## Configuration
 
-### Patterns
-Security patterns are defined in `src/patterns.txt` with the format: 
+### Security Scanner Settings
+The security ruleset is now accessible via **Preferences > Settings > Security Scanner** in Visual Studio Code. Users can customize their patterns for code detection, allowing for tailored security scanning based on specific project needs. 
+
+Additionally, a comprehensive ruleset is provided in the repository under `/pattern_library/settings.json`, which users can utilize out of the box to enhance their security scanning capabilities. 

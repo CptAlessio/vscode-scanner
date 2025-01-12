@@ -1,0 +1,700 @@
+{
+    "editor.minimap.enabled": false,
+    "securityScanner.patterns": [           
+        {
+            "name": "Password Detection",
+            "pattern": "(password|passwd|pwd).*[=:].+",
+            "description": "Hardcoded passwords in code pose a significant security risk. Credentials should be stored securely in configuration management systems or secret vaults, not in source code where they can be exposed through version control or code access."
+        },
+        {
+            "name": "Token Detection",
+            "pattern": "(token).*[=:].+",
+            "description": "Authentication tokens found in code can lead to unauthorized access if exposed. These should be stored securely and rotated regularly. Hardcoded tokens in source code risk being exposed through version control or code access."
+        },
+        {
+            "name": "API Keys and Tokens",
+            "pattern": "(api[-_]?key|access[-_]?token|auth[-_]?token|jwt|bearer).*[=:].*",
+            "description": "API keys and authentication tokens in code are high-risk security credentials. If exposed, they can grant unauthorized access to services and data. Store these in secure credential stores and use environment variables or secret management systems instead."
+        },
+        {
+            "name": "Database Connection Strings",
+            "pattern": "(connection[-_]?string|conn[-_]?str).*[=:].*|(jdbc:[^\\s]+)",
+            "description": "Database connection strings often contain sensitive credentials. Exposing these in code can lead to unauthorized database access. Use secure configuration management and encrypt sensitive connection details."
+        },
+        {
+            "name": "Database Credentials",
+            "pattern": "(user[-_]?name|user[-_]?id|db[-_]?user|database[-_]?user).*[=:].*",
+            "description": "Database credentials detected which can pose security risks if hardcoded in the source code. Ensure that database credentials are stored securely and not exposed in the codebase."
+        },
+        {
+            "name": "Webhook URLs",
+            "pattern": "(webhook|slack[-_]?hook|discord[-_]?hook).*(url|endpoint).*[=:].*",
+            "description": "Detects webhook URL assignments"
+        },
+        {
+            "name": "File Handling",
+            "pattern": "(upload[-_]?path|file[-_]?path|directory).*[=:].*",
+            "description": "Identifies file upload path configurations"
+        },
+        {
+            "name": "Secret Keys",
+            "pattern": "(secret[-_]?key|private[-_]?key|encryption[-_]?key).*[=:].*",
+            "description": "Locates secret and private key assignments"
+        },
+        {
+            "name": "AWS Credentials",
+            "pattern": "(aws[-_]?access|aws[-_]?secret|s3[-_]?bucket).*[=:].*",
+            "description": "Finds AWS-related credentials and configurations"
+        },
+        {
+            "name": "OAuth Configurations",
+            "pattern": "(oauth|client[-_]?id|client[-_]?secret).*[=:].*",
+            "description": "Detects OAuth-related configurations"
+        },
+        {
+            "name": "Environment Variables",
+            "pattern": "process\\.env[\\'|\\\"](.*?)[\\'\\\"]",
+            "description": "Identifies environment variable access"
+        },
+        {
+            "name": "Certificate Paths",
+            "pattern": "(cert|certificate|ssl|tls).*(path|file).*[=:].*",
+            "description": "Locates certificate file paths"
+        },
+        {
+            "name": "URL Parameters",
+            "pattern": "(redirect[-_]?url|callback[-_]?url|return[-_]?url).*[=:].*",
+            "description": "Identifies URL parameters that might be sensitive"
+        },
+        {
+            "name": "Command Execution",
+            "pattern": "(exec|execSync|spawn|spawnSync)\\s*\\(",
+            "description": "Dynamic command execution can lead to Remote Code Execution (RCE) vulnerabilities if user input is not properly sanitized. Attackers could inject malicious commands to execute arbitrary code on the system. Avoid using these methods with user-supplied input."
+        },
+        {
+            "name": "Encryption Keys",
+            "pattern": "(crypto|cipher|aes|rsa).*key.*[=:].*",
+            "description": "Detects encryption key assignments"
+        },
+        {
+            "name": "[PII] Email Addresses",
+            "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+            "description": "[PII] Detect email addresses in the codebase"
+        },
+        {
+            "name": "OAuth Configurations",
+            "pattern": "(oauth|client[-_]?id|client[-_]?secret)\\s*[=:]\\s*.+",
+            "description": "Detects OAuth-related configurations"
+        },
+        {
+            "name": "Vault Token",
+            "pattern": "(vault[-_]?token|VAULT_TOKEN)\\s*[=:]\\s*.+",
+            "description": "Detects HashiCorp Vault tokens"
+        },
+        {
+            "name": "Vault URL",
+            "pattern": "(vault[-_]?url|VAULT_ADDR)\\s*[=:]\\s*https?://[a-zA-Z0-9._-]+(:[0-9]+)?",
+            "description": "Identifies Vault server URLs"
+        },
+        {
+            "name": "Vault Secret Path",
+            "pattern": "(vault.*secret.*path|vault.*kv.*path)\\s*[=:]\\s*.+",
+            "description": "Locates secret paths used in Vault configurations"
+        },
+        {
+            "name": "Vault Role ID",
+            "pattern": "(vault[-_]?role[-_]?id|VAULT_ROLE_ID)\\s*[=:]\\s*.+",
+            "description": "Detects Vault AppRole Role IDs"
+        },
+        {
+            "name": "Vault Secret ID",
+            "pattern": "(vault[-_]?secret[-_]?id|VAULT_SECRET_ID)\\s*[=:]\\s*.+",
+            "description": "Detects Vault AppRole Secret IDs"
+        },
+        {
+            "name": "AWS Access Key",
+            "pattern": "AKIA[0-9A-Z]{16}",
+            "description": "Detects AWS Access Keys"
+        },
+        {
+            "name": "AWS Secret Key",
+            "pattern": "(aws[-_]?secret|aws[-_]?key|AWS_SECRET_ACCESS_KEY)\\s*[=:]\\s*.+",
+            "description": "Detects AWS Secret Access Keys"
+        },
+        {
+            "name": "AWS S3 Bucket Name",
+            "pattern": "(s3://|s3[-_]?bucket)[a-zA-Z0-9._-]+",
+            "description": "Identifies S3 bucket names in code"
+        },
+        {
+            "name": "AWS Region",
+            "pattern": "\\b(us|eu|ap|sa|ca)-(north|south)?(east|west)?-[0-9]\\b",
+            "description": "Detects AWS region identifiers (e.g., us-east-1)"
+        },
+        {
+            "name": "AWS Lambda Environment Variables",
+            "pattern": "\\b(lambda|function).*(env|environment).*process\\.env\\[['\"](.*?)['\"]",
+            "description": "Detects environment variables in AWS Lambda functions"
+        },
+        {
+            "name": "Java Runtime Execution",
+            "pattern": "Runtime\\.getRuntime\\(\\)\\.exec\\(.*\\)",
+            "description": "Runtime.exec() is a high-risk method that can execute system commands. If input is not properly validated, attackers could inject malicious commands leading to Remote Code Execution (RCE). Consider using safer alternatives or implement strict input validation."
+        },
+        {
+            "name": "Java ProcessBuilder",
+            "pattern": "new\\s+ProcessBuilder\\(.*\\)",
+            "description": "ProcessBuilder can execute system commands and create new processes. Without proper input validation, attackers could inject malicious commands. Ensure all arguments are validated and avoid using user-supplied input in command construction."
+        },
+        {
+            "name": "Java Reflection",
+            "pattern": "(Class\\.forName|Method\\.invoke|Constructor\\.newInstance)\\(.*\\)",
+            "description": "Reflection can bypass access controls and security checks. Attackers might exploit this to access restricted classes or methods. If user input influences reflection, it could lead to unauthorized code execution. Use reflection carefully and validate all inputs."
+        },
+        {
+            "name": "Java Deserialization",
+            "pattern": "(ObjectInputStream|readObject|readUnshared|Serializable)",
+            "description": "Identifies Java deserialization which can lead to remote code execution if not properly secured"
+        },
+        {
+            "name": "SQL Injection Risk",
+            "pattern": "\"SELECT.*\\+|UPDATE.*\\+|DELETE.*\\+|INSERT.*\\+",
+            "description": "Detects potential SQL injection vulnerabilities in string concatenation"
+        },
+        {
+            "name": "Java System Exit",
+            "pattern": "System\\.exit\\(",
+            "description": "Identifies calls to System.exit() which can abruptly terminate the application"
+        },
+        {
+            "name": "Java File Operations",
+            "pattern": "(new\\s+File\\(|FileInputStream\\(|FileOutputStream\\()",
+            "description": "Detects file operations that might need security review"
+        },
+        {
+            "name": "Java Security Manager Modification",
+            "pattern": "System\\.setSecurityManager\\(",
+            "description": "Identifies attempts to modify the Security Manager"
+        },
+        {
+            "name": "Java Native Methods",
+            "pattern": "native\\s+[\\w<>\\[\\]]+\\s+\\w+\\s*\\(",
+            "description": "Detects native method declarations which can be security sensitive"
+        },
+        {
+            "name": "Java Cipher Usage",
+            "pattern": "Cipher\\.getInstance\\([\"']([^\"']+)[\"']\\)",
+            "description": "Identifies cryptographic operations that might use weak algorithms"
+        },
+        {
+            "name": "Java Socket Creation",
+            "pattern": "new\\s+Socket\\(|new\\s+ServerSocket\\(",
+            "description": "Detects network socket creation which might need security review"
+        },
+        {
+            "name": "Java Security Permissions",
+            "pattern": "new\\s+Permission\\(|doPrivileged|AccessController",
+            "description": "Identifies security permission modifications and privileged actions"
+        },
+        {
+            "name": "Java Unsafe Usage",
+            "pattern": "sun\\.misc\\.Unsafe|jdk\\.internal\\.misc\\.Unsafe",
+            "description": "Detects usage of Unsafe class which can bypass Java security mechanisms"
+        },
+        {
+            "name": "Java XML Parsing",
+            "pattern": "(new\\s+SAXParser|new\\s+DocumentBuilder)(?!.*setFeature.*XMLConstants\\.FEATURE_SECURE_PROCESSING)",
+            "description": "Identifies potentially insecure XML parsing without secure processing enabled"
+        },
+        {
+            "name": "Java Trust Manager",
+            "pattern": "implements\\s+X509TrustManager|new\\s+TrustManager",
+            "description": "Detects custom trust manager implementations which might bypass SSL/TLS verification"
+        },
+        {
+            "name": "Java Hardcoded SSL Context",
+            "pattern": "SSLContext\\.getInstance\\([\"']SSL[\"']\\)",
+            "description": "Identifies potentially insecure SSL context creation without specific protocol version"
+        },
+        {
+            "name": "Java Random Number Generation",
+            "pattern": "new\\s+Random\\(|Math\\.random\\(\\)",
+            "description": "Detects use of weak random number generators instead of SecureRandom"
+        },
+        {
+            "name": "Java Dynamic Class Loading",
+            "pattern": "URLClassLoader|ClassLoader\\.loadClass",
+            "description": "Identifies dynamic class loading which can be a security risk"
+        },
+        {
+            "name": "Java Security Provider Modification",
+            "pattern": "Security\\.addProvider|Security\\.insertProviderAt",
+            "description": "Detects modifications to security providers"
+        },
+        {
+            "name": "Java Temporary File Creation",
+            "pattern": "File\\.createTempFile|Files\\.createTempFile",
+            "description": "Identifies temporary file creation which might need proper cleanup"
+        },
+        {
+            "name": "XSS Vulnerability",
+            "pattern": "response\\.getWriter\\(\\)\\.print\\(.*\\)|response\\.getWriter\\(\\)\\.write\\(.*\\)",
+            "description": "Detects potential XSS vulnerabilities in servlet responses"
+        },
+        {
+            "name": "Java LDAP Injection",
+            "pattern": "new\\s+InitialDirContext\\(|new\\s+InitialLdapContext\\(",
+            "description": "Identifies LDAP operations that might be vulnerable to injection"
+        },
+        {
+            "name": "Java Path Traversal",
+            "pattern": "\\.getCanonicalPath\\(\\)|\\.getAbsolutePath\\(\\)",
+            "description": "Detects file path operations that might be vulnerable to path traversal"
+        },
+        {
+            "name": "ASP.NET Core AllowAnyOrigin CORS",
+            "pattern": "\\.AllowAnyOrigin\\(\\)",
+            "description": "Allowing any origin in CORS policy is extremely dangerous. This can expose your API to cross-site attacks from any domain. Malicious websites could make requests to your API using the user's credentials. Specify exact allowed origins instead."
+        },
+        {
+            "name": "ASP.NET Core AllowAnyMethod CORS",
+            "pattern": "\\.AllowAnyMethod\\(\\)",
+            "description": "Identifies permissive CORS policy that allows any HTTP method"
+        },
+        {
+            "name": "ASP.NET Core AllowAnyHeader CORS",
+            "pattern": "\\.AllowAnyHeader\\(\\)",
+            "description": "Detects permissive CORS policy that allows any header"
+        },
+        {
+            "name": "SQL Statement manipulation",
+            "pattern": "FromSqlRaw|ExecuteSqlRaw|SqlQuery\\(",
+            "description": "Raw SQL execution is vulnerable to SQL injection attacks if user input is not properly parameterized. Attackers could inject malicious SQL to read, modify, or delete data. Use Entity Framework's parameterized queries or stored procedures instead."
+        },
+        {
+            "name": "ASP.NET Core Authentication Disabled",
+            "pattern": "\\.AllowAnonymous|[Aa]llowAnonymous[Aa]ttribute",
+            "description": "Disabling authentication on endpoints can expose sensitive operations to unauthorized users. While sometimes needed for public endpoints, ensure this is not used on sensitive operations. Review each anonymous endpoint carefully."
+        },
+        {
+            "name": "ASP.NET Core Authorization Disabled",
+            "pattern": "services\\.AddAuthorization\\(\\s*\\)|[Aa]uthorization\\s*=\\s*false",
+            "description": "Identifies potential disabled authorization settings"
+        },
+        {
+            "name": "ASP.NET Core Directory Operations",
+            "pattern": "Directory\\.(GetFiles|CreateDirectory|Delete)",
+            "description": "Detects file system operations that might need security review"
+        },
+        {
+            "name": "ASP.NET Core Path Manipulation",
+            "pattern": "Path\\.(Combine|GetFullPath)|Server\\.MapPath",
+            "description": "Identifies path manipulation that might be vulnerable to path traversal"
+        },
+        {
+            "name": "Insecure Deserialization",
+            "pattern": "JsonSerializer\\.Deserialize|XmlSerializer\\.Deserialize|BinaryFormatter",
+            "description": "Detects potentially unsafe deserialization operations that can lead to remote code execution, data tampering, or denial of service attacks. Ensure that deserialization is performed on trusted data only."
+        },
+        {
+            "name": "ASP.NET Core Response Headers",
+            "pattern": "\\.Headers\\.Add|Response\\.Headers\\[",
+            "description": "Identifies manual response header manipulation that might need security review"
+        },
+        {
+            "name": "ASP.NET Core HTML Encoding Disabled",
+            "pattern": "@Html\\.Raw|HtmlString|MarkupString",
+            "description": "Disabling HTML encoding can lead to Cross-Site Scripting (XSS) vulnerabilities. Unencoded user input rendered in the page could execute malicious scripts. Always encode user input and avoid using Raw HTML unless absolutely necessary with trusted content."
+        },
+        {
+            "name": "ASP.NET Core Request Validation Disabled",
+            "pattern": "ValidateAntiForgeryToken\\s*=\\s*false|\\[IgnoreAntiforgeryToken\\]",
+            "description": "Disabling antiforgery token validation exposes your application to Cross-Site Request Forgery (CSRF) attacks. Attackers could trick users into making unwanted requests. Keep validation enabled for all state-changing operations."
+        },
+        {
+            "name": "ASP.NET Core Session Configuration",
+            "pattern": "UseSession|Session\\.",
+            "description": "Detects session usage that might need security review"
+        },
+        {
+            "name": "ASP.NET Core Cookie Configuration",
+            "pattern": "\\.Cookie\\(|new\\s+CookieOptions|HttpOnly\\s*=\\s*false|Secure\\s*=\\s*false",
+            "description": "Insecure cookie configuration can expose sensitive data. Cookies without HttpOnly flag are vulnerable to XSS attacks. Cookies without Secure flag can be intercepted over HTTP. Always set both flags for security-sensitive cookies."
+        },
+        {
+            "name": "Weak Hashing",
+            "pattern": "MD5|SHA1|new\\s+SHA1",
+            "description": "Detects usage of cryptographically weak hash algorithms"
+        },
+        {
+            "name": "Insecure Random",
+            "pattern": "new\\s+Random\\(|Random\\.Next",
+            "description": "Identifies use of weak random number generation instead of cryptographic random"
+        },
+        {
+            "name": "ASP.NET Core Debug Mode",
+            "pattern": "UseDeveloperExceptionPage|IsDevelopment\\(\\)",
+            "description": "Developer exception pages and debug features can expose sensitive application details, stack traces, and configuration data to attackers. Ensure these are disabled in production environments to prevent information disclosure."
+        },
+        {
+            "name": "ASP.NET Core Sensitive Data Logging",
+            "pattern": "EnableSensitiveDataLogging|IncludeExceptionDetails",
+            "description": "Identifies enabled sensitive data logging which might leak sensitive information"
+        },
+        {
+            "name": "ASP.NET Core File Upload",
+            "pattern": "IFormFile|HttpPostedFile|UploadFile",
+            "description": "Detects file upload functionality that might need security review"
+        },
+        {
+            "name": "ASP.NET Core Redirect",
+            "pattern": "Redirect\\(|RedirectToAction\\(|RedirectToPage\\(",
+            "description": "Identifies redirects that might need validation against open redirect attacks"
+        },
+        {
+            "name": "ASP.NET Core ViewData Usage",
+            "pattern": "ViewData\\[|ViewBag\\.",
+            "description": "Detects ViewData/ViewBag usage which might need XSS protection"
+        },
+        {
+            "name": "ASP.NET Core Model Validation Disabled",
+            "pattern": "\\[ValidateNever\\]|ModelState\\.Clear\\(\\)",
+            "description": "Identifies disabled model validation which might lead to security issues"
+        },
+        {
+            "name": "ASP.NET Core Insecure Configuration",
+            "pattern": "GetConnectionString\\(|ConnectionStrings\\[",
+            "description": "Detects access to connection strings that might contain sensitive data"
+        },
+        {
+            "name": "Process Execution",
+            "pattern": "Process\\.Start|new\\s+Process\\(",
+            "description": "Identifies process execution that might be security sensitive"
+        },
+        {
+            "name": "ASP.NET Core Reflection Usage",
+            "pattern": "Assembly\\.Load|Type\\.GetType\\(|Activator\\.CreateInstance",
+            "description": "Detects use of reflection which might bypass security controls"
+        },
+        {
+            "name": "Rust Unsafe Block",
+            "pattern": "unsafe\\s*\\{",
+            "description": "Unsafe blocks in Rust bypass the compiler's safety guarantees. These blocks can lead to undefined behavior, memory corruption, or security vulnerabilities if not properly implemented. Review all unsafe code carefully and document why it's necessary."
+        },
+        {
+            "name": "Rust Raw Pointer Usage",
+            "pattern": "\\*(?:mut|const)\\s+(?:[a-zA-Z_][a-zA-Z0-9_]*|\\()",
+            "description": "Raw pointer dereferencing in Rust can lead to memory safety issues. Raw pointers bypass Rust's ownership and borrowing rules, potentially causing use-after-free, null pointer dereference, or buffer overflow vulnerabilities."
+        },
+        {
+            "name": "Rust FFI Declaration",
+            "pattern": "extern\\s+\"C\"\\s*\\{",
+            "description": "Foreign Function Interface (FFI) calls to C code bypass Rust's safety guarantees. C code can introduce memory safety issues, buffer overflows, and other vulnerabilities. Ensure all FFI boundaries are properly validated and documented."
+        },
+        {
+            "name": "Rust Memory Transmutation",
+            "pattern": "std::mem::transmute|mem::transmute",
+            "description": "Memory transmutation can lead to undefined behavior if types are not compatible. This bypasses Rust's type system and can cause memory corruption or security vulnerabilities. Use safe alternatives like as casting when possible."
+        },
+        {
+            "name": "Rust Unprotected File Operations",
+            "pattern": "std::fs::(write|read|copy|remove)",
+            "description": "Direct file system operations without proper permission checks or error handling can lead to security issues. Consider TOCTOU vulnerabilities and ensure proper access controls and error handling are in place."
+        },
+        {
+            "name": "Rust Command Execution",
+            "pattern": "std::process::Command|process::Command",
+            "description": "Command execution can be dangerous if input is not properly sanitized. Attackers could inject malicious commands through user input. Validate and sanitize all command arguments, especially user-provided input."
+        },
+        {
+            "name": "Rust Global Mutable State",
+            "pattern": "static\\s+mut|lazy_static",
+            "description": "Global mutable state can lead to race conditions and thread safety issues. Ensure proper synchronization mechanisms are in place and consider using thread-safe alternatives like Mutex or RwLock."
+        },
+        {
+            "name": "Rust Panic Possibility",
+            "pattern": "unwrap\\(\\)|expect\\(|panic!|assert!",
+            "description": "Unwrap and panic operations can cause program termination if assumptions are wrong. In production code, these can be exploited for denial of service attacks. Use proper error handling with Result and Option instead."
+        },
+        {
+            "name": "Rust Unprotected Network Binding",
+            "pattern": "TcpListener::bind|UdpSocket::bind",
+            "description": "Binding to network interfaces without proper restrictions can expose services unintentionally. Ensure proper interface binding and implement necessary access controls and input validation."
+        },
+        {
+            "name": "Rust Weak Cryptography",
+            "pattern": "rand::random|rand::thread_rng",
+            "description": "Using non-cryptographic random number generators for security-sensitive operations is dangerous. Use crypto-secure alternatives like OsRng for cryptographic operations."
+        },
+        {
+            "name": "Rust Serialization",
+            "pattern": "#\\[derive\\(Serialize|Deserialize\\)\\]|serde_json::from_str",
+            "description": "Untrusted deserialization can lead to security vulnerabilities. Validate all deserialized data and consider using serde's deny_unknown_fields to prevent injection attacks."
+        },
+        {
+            "name": "Rust Unchecked Array Access",
+            "pattern": "get_unchecked|get_unchecked_mut",
+            "description": "Unchecked array access bypasses bounds checking and can lead to buffer overflows. Use safe alternatives with proper bounds checking unless performance is absolutely critical and safety is guaranteed."
+        },
+        {
+            "name": "Rust Thread Safety Issue",
+            "pattern": "Send\\s*\\+\\s*Sync|!Send|!Sync",
+            "description": "Incorrect thread safety markers can lead to data races and undefined behavior. Carefully review types marked as Send/Sync or explicitly not Send/Sync to ensure thread safety guarantees are maintained."
+        },
+        {
+            "name": "Rust Memory Leaks",
+            "pattern": "Box::leak|std::mem::forget",
+            "description": "Intentional memory leaks can lead to resource exhaustion. While sometimes necessary, ensure proper documentation and consider alternatives that maintain memory safety."
+        },
+        {
+            "name": "Rust Unsafe Trait Implementation",
+            "pattern": "unsafe\\s+impl|unsafe\\s+trait",
+            "description": "Unsafe trait implementations must uphold specific safety contracts. Incorrect implementations can lead to undefined behavior. Document and verify all safety requirements."
+        },
+        {
+            "name": "Rust Raw Memory Allocation",
+            "pattern": "alloc::alloc|std::alloc::alloc",
+            "description": "Direct memory allocation can lead to memory safety issues if not properly handled. Use safe abstractions like Vec or Box unless raw allocation is absolutely necessary."
+        },
+        {
+            "name": "Rust Environment Variables",
+            "pattern": "std::env::var|env::var",
+            "description": "Unvalidated environment variables can lead to security issues. Validate and sanitize all environment variables, especially those affecting program behavior or paths."
+        },
+        {
+            "name": "Rust Temporary File Usage",
+            "pattern": "std::env::temp_dir|tempfile::",
+            "description": "Temporary file operations can be vulnerable to TOCTOU attacks. Ensure proper file permissions and cleanup, and consider using secure alternatives like tempfile crate with proper configurations."
+        },
+        {
+            "name": "Rust Unprotected Mutex",
+            "pattern": "Mutex::new\\(|RwLock::new\\(",
+            "description": "Improper mutex usage can lead to deadlocks or race conditions. Ensure proper lock acquisition order and error handling, and consider using parking_lot for better deadlock protection."
+        },
+        {
+            "name": "Rust Debug Information",
+            "pattern": "println!|dbg!|debug!",
+            "description": "Debug output might leak sensitive information in production. Ensure all debug statements are properly configured for different environments and don't expose sensitive data."
+        },
+        {
+            "name": "TypeScript Type Assertion",
+            "pattern": "as\\s+any|<any>",
+            "description": "Type assertions to 'any' bypass TypeScript's type checking. This can lead to runtime errors and potential security vulnerabilities. Use proper type definitions or type guards instead of bypassing the type system."
+        },
+        {
+            "name": "TypeScript eval Usage",
+            "pattern": "eval\\(|new\\s+Function\\(|setTimeout\\(['\"]|setInterval\\(['\"]",
+            "description": "Dynamic code execution through eval() or similar functions is extremely dangerous. This can lead to code injection vulnerabilities if user input is involved. Avoid dynamic code execution and use safer alternatives."
+        },
+        {
+            "name": "TypeScript innerHTML Usage",
+            "pattern": "\\.innerHTML\\s*=|\\.outerHTML\\s*=",
+            "description": "Direct manipulation of innerHTML/outerHTML can lead to Cross-Site Scripting (XSS) vulnerabilities. Use safe DOM manipulation methods or sanitize HTML content before insertion. Consider using textContent for text-only content."
+        },
+        {
+            "name": "TypeScript Prototype Pollution",
+            "pattern": "Object\\.assign\\(|\\.__proto__|Object\\.prototype",
+            "description": "Modifying object prototypes can lead to prototype pollution vulnerabilities. Attackers could inject malicious properties that affect all objects. Use Object.create(null) or avoid prototype manipulation."
+        },
+        {
+            "name": "TypeScript DOM XSS Sinks",
+            "pattern": "document\\.write\\(|document\\.writeln\\(|\\.insertAdjacentHTML\\(",
+            "description": "These DOM manipulation methods are vulnerable to XSS if user input is not properly sanitized. Use safe DOM manipulation methods and always sanitize user input before inserting into the DOM."
+        },
+        {
+            "name": "TypeScript Insecure Random",
+            "pattern": "Math\\.random\\(\\)",
+            "description": "Math.random() is not cryptographically secure and should not be used for security-sensitive operations. Use crypto.getRandomValues() or a secure random number generator for cryptographic purposes."
+        },
+        {
+            "name": "TypeScript Dangerous Object Methods",
+            "pattern": "Object\\.entries\\(|Object\\.keys\\(|Object\\.values\\(",
+            "description": "These methods can expose sensitive object properties. When used with user-controlled objects, they might reveal internal properties. Ensure proper property filtering before exposing object data."
+        },
+        {
+            "name": "TypeScript Reflected Data",
+            "pattern": "location\\.hash|location\\.search|location\\.href|document\\.referrer",
+            "description": "Using URL data without sanitization can lead to XSS or injection attacks. Always sanitize and validate URL-derived data before using it in your application."
+        },
+        {
+            "name": "TypeScript Insecure Postmessage",
+            "pattern": "postMessage\\(|addEventListener\\(['\"]message['\"]",
+            "description": "Improper postMessage handling can lead to cross-origin security vulnerabilities. Always verify the origin and sanitize message data in postMessage handlers."
+        },
+        {
+            "name": "TypeScript LocalStorage Usage",
+            "pattern": "localStorage\\.|sessionStorage\\.",
+            "description": "Storing sensitive data in localStorage/sessionStorage can expose it to XSS attacks. Never store sensitive information like tokens or personal data in client-side storage."
+        },
+        {
+            "name": "TypeScript Dangerous jQuery",
+            "pattern": "\\$\\(.*\\)\\.html\\(|\\$\\(.*\\)\\.append\\(|\\$\\(.*\\)\\.prepend\\(",
+            "description": "jQuery DOM manipulation methods can be vulnerable to XSS attacks. Always sanitize content before using these methods and consider using safer alternatives."
+        },
+        {
+            "name": "TypeScript Template Injection",
+            "pattern": "`.*\\$\\{.*\\}`",
+            "description": "Template literals with user input can lead to template injection vulnerabilities. Sanitize all variables used in template literals, especially when generating HTML or SQL queries."
+        },
+        {
+            "name": "TypeScript Dangerous RegExp",
+            "pattern": "new\\s+RegExp\\(|RegExp\\(",
+            "description": "Dynamic RegExp creation with user input can lead to ReDoS (Regular Expression Denial of Service) attacks. Validate and limit the complexity of dynamic regular expressions."
+        },
+        {
+            "name": "TypeScript Insecure Timeout",
+            "pattern": "setTimeout\\(.*,\\s*0\\)|setImmediate\\(",
+            "description": "Zero-delay timeouts can be exploited for timing attacks. Be cautious with timing-sensitive operations and consider using more secure alternatives."
+        },
+        {
+            "name": "TypeScript Clipboard Access",
+            "pattern": "navigator\\.clipboard|document\\.execCommand\\(['\"]copy['\"]",
+            "description": "Clipboard operations can expose sensitive data or be used for clipboard hijacking attacks. Implement proper security controls and user notifications for clipboard operations."
+        },
+        {
+            "name": "TypeScript WebSocket Usage",
+            "pattern": "new\\s+WebSocket\\(|WebSocket\\(",
+            "description": "Insecure WebSocket connections can expose data to man-in-the-middle attacks. Always use secure WebSocket (wss://) and validate the server certificate."
+        },
+        {
+            "name": "Fetch Without Validation",
+            "pattern": "fetch\\(|axios\\(|\\.get\\(|\\.post\\(",
+            "description": "Requests without proper validation can lead to CSRF or injection attacks depending on the context, particularly if these values are used in SQL queries or other sensitive operations. Check if these values are validated to prevent injection attacks."
+        },
+        {
+            "name": ".NET StreamReader Usage",
+            "pattern": "new\\s+StreamReader\\(|File\\.OpenText\\(|StreamReader\\.",
+            "description": "StreamReader usage without proper disposal can lead to resource leaks and file handle exhaustion. Ensure proper use of 'using' statements and check for potential file path manipulation vulnerabilities."
+        },
+        {
+            "name": ".NET StreamWriter Usage",
+            "pattern": "new\\s+StreamWriter\\(|File\\.CreateText\\(|File\\.AppendText\\(|StreamWriter\\.",
+            "description": "StreamWriter usage without proper disposal can lead to resource leaks and data corruption. Ensure proper use of 'using' statements and validate file paths to prevent path traversal attacks."
+        },
+        {
+            "name": "Base64 Encoding (.NET)",
+            "pattern": "Convert\\.ToBase64String|Convert\\.FromBase64String|System\\.Convert\\.ToBase64String|System\\.Convert\\.FromBase64String",
+            "description": "Base64 encoding is often used to encode sensitive data. Ensure encoded data doesn't contain credentials, tokens, or other sensitive information that should be stored securely."
+        },
+        {
+            "name": "Base64 Encoding (Java)",
+            "pattern": "Base64\\.getEncoder\\(\\)|Base64\\.getDecoder\\(\\)|Base64\\.encodeBase64|Base64\\.decodeBase64",
+            "description": "Base64 encoding in Java might contain sensitive data. Check for encoded credentials, tokens, or other sensitive information that should be stored in secure configuration systems."
+        },
+        {
+            "name": "Base64 Encoding (JavaScript/TypeScript)",
+            "pattern": "btoa\\(|atob\\(|Buffer\\.from\\([^,]+,\\s*['\"](base64|base64url)['\"]\\)|toString\\(['\"](base64|base64url)['\"]\\)",
+            "description": "Base64 encoding in JavaScript/TypeScript might expose sensitive data in client-side code. Avoid encoding sensitive information that could be visible in the browser."
+        },
+        {
+            "name": "Base64 Encoding (Python)",
+            "pattern": "base64\\.(b64encode|b64decode|standard_b64encode|standard_b64decode|urlsafe_b64encode|urlsafe_b64decode)",
+            "description": "Base64 encoding in Python might contain sensitive data. Verify that encoded content doesn't include credentials or sensitive configuration that should be stored securely."
+        },
+        {
+            "name": "Base64 Encoding (Rust)",
+            "pattern": "base64::(encode|decode)|STANDARD\\.encode|STANDARD\\.decode|URL_SAFE\\.encode|URL_SAFE\\.decode",
+            "description": "Base64 encoding in Rust might contain sensitive information. Ensure encoded data doesn't contain credentials or sensitive data that should be stored in secure configuration."
+        },
+        {
+            "name": "Base64 Encoding (PHP)",
+            "pattern": "base64_encode|base64_decode",
+            "description": "Base64 encoding in PHP might expose sensitive data. Check for encoded credentials or sensitive information that should be stored using secure methods like password_hash."
+        },
+        {
+            "name": "Base64 Pattern Detection",
+            "pattern": "[A-Za-z0-9+/]{32,}={0,2}",
+            "description": "Detected potential Base64 encoded string. This might contain sensitive data like tokens, credentials, or private keys. Ensure sensitive data is not hardcoded and is stored securely."
+        },
+        {
+            "name": ".NET Thread Creation",
+            "pattern": "new\\s+Thread\\(|Thread\\.Start\\(|ThreadPool\\.QueueUserWorkItem",
+            "description": "Direct thread creation and manipulation can lead to resource exhaustion and race conditions. Use higher-level abstractions like Task/TaskFactory or async/await patterns for better thread management and safety."
+        },
+        {
+            "name": ".NET Thread Synchronization",
+            "pattern": "Monitor\\.(Enter|Exit)|lock\\s*\\(|Interlocked\\.|ManualResetEvent|AutoResetEvent",
+            "description": "Improper thread synchronization can lead to deadlocks, race conditions, or resource leaks. Ensure proper lock ordering, use timeouts, and consider using higher-level synchronization primitives like SemaphoreSlim or AsyncLock."
+        },
+        {
+            "name": ".NET Parallel Operations",
+            "pattern": "Parallel\\.(For|ForEach|Invoke)|Task\\.WhenAll|Task\\.WhenAny",
+            "description": "Parallel operations can cause thread exhaustion or unhandled exceptions if not properly managed. Ensure proper exception handling, resource management, and consider using cancellation tokens for controlled termination."
+        },
+        {
+            "name": "Java Thread Creation",
+            "pattern": "new\\s+Thread\\(|extends\\s+Thread|implements\\s+Runnable|ExecutorService|Executors\\.",
+            "description": "Direct thread creation in Java can lead to resource management issues. Use thread pools via ExecutorService for better resource control and consider implementing proper shutdown procedures."
+        },
+        {
+            "name": "Java Thread Synchronization",
+            "pattern": "synchronized\\s*(\\(|\\{)|wait\\(|notify\\(|notifyAll\\(|ReentrantLock|Semaphore",
+            "description": "Improper synchronization can cause deadlocks or race conditions. Use higher-level concurrency utilities from java.util.concurrent when possible, and ensure proper lock ordering and timeout mechanisms."
+        },
+        {
+            "name": "Java Volatile Usage",
+            "pattern": "volatile\\s+\\w+|AtomicInteger|AtomicLong|AtomicReference",
+            "description": "Volatile variables and atomic operations need careful consideration for thread safety. Ensure proper usage for intended memory visibility and consider using higher-level concurrent collections or synchronization mechanisms."
+        },
+        {
+            "name": "Python Threading",
+            "pattern": "threading\\.(Thread|Timer)|multiprocessing\\.(Process|Pool)|concurrent\\.futures",
+            "description": "Python threading can be affected by the Global Interpreter Lock (GIL). Consider using multiprocessing for CPU-bound tasks and ensure proper resource cleanup with context managers or finally blocks."
+        },
+        {
+            "name": "Python Thread Synchronization",
+            "pattern": "threading\\.(Lock|RLock|Semaphore|Event|Condition)|Queue\\.|asyncio\\.",
+            "description": "Thread synchronization in Python requires careful handling to prevent deadlocks and race conditions. Use context managers (with statements) for locks and consider asyncio for I/O-bound concurrent operations."
+        },
+        {
+            "name": "Python Shared State",
+            "pattern": "threading\\.local\\(\\)|multiprocessing\\.Value|multiprocessing\\.Array",
+            "description": "Shared state between threads or processes needs proper synchronization. Use thread-local storage or proper synchronization primitives, and consider message passing instead of shared state."
+        },
+        {
+            "name": "Rust Thread Spawn",
+            "pattern": "thread::spawn|ThreadBuilder::new|thread::scope",
+            "description": "Thread spawning in Rust must ensure proper lifetime and ownership rules. Verify that shared data implements Send and Sync traits appropriately, and consider using thread pools for better resource management."
+        },
+        {
+            "name": "Rust Thread Synchronization",
+            "pattern": "Arc::new|Mutex::new|RwLock::new|Condvar::new|mpsc::|crossbeam::",
+            "description": "Thread synchronization in Rust requires careful consideration of ownership and lifetimes. Ensure proper lock ordering to prevent deadlocks and use channels (mpsc or crossbeam) when message passing is more appropriate."
+        },
+        {
+            "name": "Rust Atomic Operations",
+            "pattern": "AtomicBool|AtomicI32|AtomicU32|AtomicUsize|fence\\(|atomic::",
+            "description": "Atomic operations require careful consideration of memory ordering. Ensure proper memory ordering constraints are specified and consider higher-level synchronization primitives when atomic operations alone are insufficient."
+        },
+        {
+            "name": "Thread Pool Configuration",
+            "pattern": "(ThreadPool|thread_pool|ExecutorService)\\.new(Fixed|Cached|Scheduled|Single)",
+            "description": "Thread pool configuration can impact application performance and resource usage. Ensure appropriate pool sizes, proper shutdown procedures, and consider using bounded queues to prevent resource exhaustion."
+        },
+        {
+            "name": "Async/Await Misuse",
+            "pattern": "async\\s+fn|async\\s+\\{|\\.await|Task\\.Run|Task\\.Factory",
+            "description": "Improper async/await usage can lead to thread pool starvation or deadlocks. Avoid blocking operations in async code, properly handle exceptions, and be cautious with async void methods."
+        },
+        {
+            "name": "Thread Priority Modification",
+            "pattern": "\\.Priority\\s*=|Thread\\.CurrentThread\\.Priority|setPriority\\(|thread::current\\(\\)\\.set_priority",
+            "description": "Thread priority modifications can lead to thread starvation or inconsistent behavior across platforms. Avoid modifying thread priorities unless absolutely necessary and document the reasoning."
+        },
+        {
+            "name": ".NET Thread Sleep",
+            "pattern": "Thread\\.Sleep\\(|Task\\.Delay\\(",
+            "description": "Thread.Sleep and Task.Delay can cause performance issues and potential deadlocks. Thread.Sleep blocks the current thread, wasting resources and potentially causing thread pool starvation. Use async/await with Task.Delay for delays in async code, or consider using event-based approaches instead of sleep operations."
+        },
+        {
+            "name": "Java Thread Sleep",
+            "pattern": "Thread\\.sleep\\(|TimeUnit\\.[A-Z]+\\.sleep\\(",
+            "description": "Thread.sleep operations block the current thread and can lead to performance issues or deadlocks. Consider using scheduled executors, CompletableFuture.delayedExecutor, or other non-blocking alternatives. In GUI applications, use Platform.runLater or SwingUtilities.invokeLater for delays."
+        },
+        {
+            "name": "Insecure HTTP Usage",
+            "pattern": "http://[^s]",
+            "description": "Using non-secure HTTP protocol can expose data to man-in-the-middle attacks and eavesdropping. All network communications should use HTTPS to ensure data encryption in transit. Update URLs to use 'https://' instead of 'http://' and ensure proper certificate validation."
+        }
+    ]
+}

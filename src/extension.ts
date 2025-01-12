@@ -22,18 +22,117 @@ const highlightDecoration = vscode.window.createTextEditorDecorationType({
 });
 
 /**
+ * Gets security patterns from VS Code settings
+ * @returns Array of security patterns
+ */
+function getSecurityPatterns(): SecurityPattern[] {
+    const config = vscode.workspace.getConfiguration('securityScanner');
+    return config.get<SecurityPattern[]>('patterns') || [];
+}
+
+/**
+ * Updates security patterns in VS Code settings
+ * @param patterns - Array of security patterns to save
+ */
+async function updateSecurityPatterns(patterns: SecurityPattern[]): Promise<void> {
+    const config = vscode.workspace.getConfiguration('securityScanner');
+    await config.update('patterns', patterns, vscode.ConfigurationTarget.Global);
+}
+
+/**
+ * Shows an input box to collect pattern information from the user
+ * @param pattern - Optional existing pattern to edit
+ * @returns A new or updated security pattern, or undefined if cancelled
+ */
+async function showPatternInputBox(pattern?: SecurityPattern): Promise<SecurityPattern | undefined> {
+    const name = await vscode.window.showInputBox({
+        prompt: 'Enter pattern name',
+        value: pattern?.name || '',
+        validateInput: value => value ? null : 'Pattern name is required'
+    });
+    if (!name) return undefined;
+
+    const regexPattern = await vscode.window.showInputBox({
+        prompt: 'Enter regex pattern',
+        value: pattern?.pattern || '',
+        validateInput: value => {
+            try {
+                new RegExp(value);
+                return null;
+            } catch {
+                return 'Invalid regex pattern';
+            }
+        }
+    });
+    if (!regexPattern) return undefined;
+
+    const description = await vscode.window.showInputBox({
+        prompt: 'Enter pattern description',
+        value: pattern?.description || '',
+        validateInput: value => value ? null : 'Description is required'
+    });
+    if (!description) return undefined;
+
+    return { name, pattern: regexPattern, description };
+}
+
+/**
  * Activates the security scanner extension.
  * This is the main entry point of the extension that sets up:
  * - Tree view for security findings
  * - File opening and highlighting functionality
  * - Hover provider for security issues
  * - Code scanning command
+ * - Pattern management commands
  * 
  * @param context - The extension context provided by VS Code
  */
 export function activate(context: vscode.ExtensionContext) {
     const treeProvider = new SecurityTreeProvider();
     vscode.window.registerTreeDataProvider('securityScanner', treeProvider);
+
+    // Register pattern management commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('security-scanner.addPattern', async () => {
+            const newPattern = await showPatternInputBox();
+            if (newPattern) {
+                const patterns = getSecurityPatterns();
+                patterns.push(newPattern);
+                await updateSecurityPatterns(patterns);
+                vscode.window.showInformationMessage(`Added security pattern: ${newPattern.name}`);
+            }
+        }),
+
+        vscode.commands.registerCommand('security-scanner.editPattern', async () => {
+            const patterns = getSecurityPatterns();
+            const selected = await vscode.window.showQuickPick(
+                patterns.map(p => ({ label: p.name, pattern: p })),
+                { placeHolder: 'Select pattern to edit' }
+            );
+            if (selected) {
+                const updatedPattern = await showPatternInputBox(selected.pattern);
+                if (updatedPattern) {
+                    const index = patterns.findIndex(p => p.name === selected.pattern.name);
+                    patterns[index] = updatedPattern;
+                    await updateSecurityPatterns(patterns);
+                    vscode.window.showInformationMessage(`Updated security pattern: ${updatedPattern.name}`);
+                }
+            }
+        }),
+
+        vscode.commands.registerCommand('security-scanner.removePattern', async () => {
+            const patterns = getSecurityPatterns();
+            const selected = await vscode.window.showQuickPick(
+                patterns.map(p => ({ label: p.name, pattern: p })),
+                { placeHolder: 'Select pattern to remove' }
+            );
+            if (selected) {
+                const updatedPatterns = patterns.filter(p => p.name !== selected.pattern.name);
+                await updateSecurityPatterns(updatedPatterns);
+                vscode.window.showInformationMessage(`Removed security pattern: ${selected.pattern.name}`);
+            }
+        })
+    );
 
     /**
      * Opens a file and highlights the line containing a security finding.
@@ -98,70 +197,89 @@ export function activate(context: vscode.ExtensionContext) {
 
     /**
      * Scans workspace files for security patterns.
-     * Reads patterns and descriptions from configuration files,
+     * Gets patterns from VS Code settings,
      * searches through all workspace files (excluding node_modules),
      * and updates the tree view with any findings.
      */
     let disposable = vscode.commands.registerCommand('security-scanner.scanCode', async () => {
         try {
-            // Read patterns and descriptions
-            const patternsPath = path.join(context.extensionPath, 'src', 'patterns.txt');
-            const descriptionsPath = path.join(context.extensionPath, 'src', 'hover-descriptions.txt');
+            const securityPatterns = getSecurityPatterns();
             
-            const patterns = fs.readFileSync(patternsPath, 'utf8')
-                .split('\n')
-                .filter(line => line.trim() !== '');
-                
-            const descriptions = fs.readFileSync(descriptionsPath, 'utf8')
-                .split('\n')
-                .filter(line => line.trim() !== '')
-                .reduce((acc, line) => {
-                    const [name, desc] = line.split('=');
-                    acc[name.trim()] = desc.trim();
-                    return acc;
-                }, {} as Record<string, string>);
-
-            const securityPatterns: SecurityPattern[] = patterns.map(line => {
-                const [name, pattern] = line.split('=');
-                return {
-                    name: name.trim(),
-                    pattern: pattern.trim(),
-                    description: descriptions[name.trim()] || 'Security issue detected'
-                };
-            });
+            if (securityPatterns.length === 0) {
+                vscode.window.showWarningMessage('No security patterns configured. Add patterns in settings first.');
+                return;
+            }
 
             // Get all text documents
             const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
             
             let findings: SecurityFinding[] = [];
+            let skippedFiles = 0;
+
+            // Common binary file extensions to skip
+            const binaryExtensions = new Set([
+                '.dll', '.exe', '.obj', '.bin', '.cache', '.pdb',
+                '.jpg', '.jpeg', '.png', '.gif', '.ico', '.webp',
+                '.pdf', '.zip', '.tar', '.gz', '.7z', '.rar',
+                '.mp3', '.mp4', '.avi', '.mov', '.wmv',
+                '.ttf', '.otf', '.woff', '.woff2',
+                '.pyc', '.pyo', '.pyd',
+                '.so', '.dylib',
+                '.class'
+            ]);
 
             // Scan each file
             for (const file of files) {
-                const document = await vscode.workspace.openTextDocument(file);
-                const text = document.getText();
-                const lines = text.split('\n');
+                try {
+                    // Skip files with binary extensions
+                    const extension = file.path.toLowerCase().split('.').pop();
+                    if (extension && binaryExtensions.has('.' + extension)) {
+                        skippedFiles++;
+                        continue;
+                    }
 
-                securityPatterns.forEach(({ name, pattern, description }) => {
-                    const regex = new RegExp(pattern);
-                    lines.forEach((line, index) => {
-                        if (regex.test(line)) {
-                            findings.push(new SecurityFinding(
-                                name,
-                                file.fsPath,
-                                index + 1,
-                                line.trim(),
-                                description
-                            ));
-                        }
+                    // Try to detect binary content
+                    const document = await vscode.workspace.openTextDocument(file);
+                    const text = document.getText();
+
+                    // Simple binary detection: check for null bytes or high percentage of non-printable characters
+                    const firstFewBytes = text.slice(0, 1000); // Check first 1000 characters
+                    if (firstFewBytes.includes('\0') || isBinaryContent(firstFewBytes)) {
+                        skippedFiles++;
+                        continue;
+                    }
+
+                    const lines = text.split('\n');
+
+                    securityPatterns.forEach(({ name, pattern, description }) => {
+                        const regex = new RegExp(pattern);
+                        lines.forEach((line, index) => {
+                            if (regex.test(line)) {
+                                findings.push(new SecurityFinding(
+                                    name,
+                                    file.fsPath,
+                                    index + 1,
+                                    line.trim(),
+                                    description
+                                ));
+                            }
+                        });
                     });
-                });
+                } catch (error) {
+                    // Log the error but continue scanning other files
+                    console.log(`Error scanning file ${file.fsPath}: ${error}`);
+                    skippedFiles++;
+                }
             }
 
             // Update tree view with findings
             treeProvider.refresh(findings);
 
+            // Show summary message
             if (findings.length === 0) {
-                vscode.window.showInformationMessage('No security patterns found.');
+                vscode.window.showInformationMessage(`No security patterns found. ${skippedFiles} files were skipped.`);
+            } else {
+                vscode.window.showInformationMessage(`Found ${findings.length} security pattern matches. ${skippedFiles} files were skipped.`);
             }
 
         } catch (error) {
@@ -170,6 +288,27 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(disposable);
+}
+
+/**
+ * Checks if content appears to be binary by looking at the ratio of non-printable characters
+ * @param content - The content to check
+ * @returns true if the content appears to be binary
+ */
+function isBinaryContent(content: string): boolean {
+    let nonPrintable = 0;
+    const sampleSize = Math.min(content.length, 1000);
+    
+    for (let i = 0; i < sampleSize; i++) {
+        const charCode = content.charCodeAt(i);
+        // Check for non-printable characters (excluding common whitespace)
+        if ((charCode < 32 && ![9, 10, 13].includes(charCode)) || charCode === 0xFFFD) {
+            nonPrintable++;
+        }
+    }
+
+    // If more than 10% of characters are non-printable, consider it binary
+    return (nonPrintable / sampleSize) > 0.1;
 }
 
 /**
