@@ -287,7 +287,7 @@
             "description": "Detects file system operations that might need security review"
         },
         {
-            "name": "ASP.NET Core Path Manipulation",
+            "name": "Path Manipulation",
             "pattern": "Path\\.(Combine|GetFullPath)|Server\\.MapPath",
             "description": "Identifies path manipulation that might be vulnerable to path traversal"
         },
@@ -600,11 +600,6 @@
             "name": "Base64 Encoding (PHP)",
             "pattern": "base64_encode|base64_decode",
             "description": "Base64 encoding in PHP might expose sensitive data. Check for encoded credentials or sensitive information that should be stored using secure methods like password_hash."
-        },
-        {
-            "name": "Base64 Pattern Detection",
-            "pattern": "[A-Za-z0-9+/]{32,}={0,2}",
-            "description": "Detected potential Base64 encoded string. This might contain sensitive data like tokens, credentials, or private keys. Ensure sensitive data is not hardcoded and is stored securely."
         },
         {
             "name": ".NET Thread Creation",

@@ -2,7 +2,7 @@
     "name": "vscode-scanner",
     "displayName": "Security Scanner",
     "description": "Scan code for security patterns and vulnerabilities",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.60.0"
     },
@@ -21,6 +21,11 @@
                 "command": "security-scanner.scanCode",
                 "title": "Scan Code for Security Issues",
                 "icon": "$(search)"
+            },
+            {
+                "command": "security-scanner.generateReport",
+                "title": "Generate Security Report",
+                "icon": "$(notebook)"
             },
             {
                 "command": "security-scanner.addPattern",
@@ -66,9 +71,14 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "security-scanner.addPattern",
+                    "command": "security-scanner.generateReport",
                     "when": "view == securityScanner",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "security-scanner.addPattern",
+                    "when": "view == securityScanner",
+                    "group": "navigation@3"
                 }
             ],
             "view/item/context": [

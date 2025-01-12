@@ -77,6 +77,97 @@ async function showPatternInputBox(pattern?: SecurityPattern): Promise<SecurityP
 }
 
 /**
+ * Generates a detailed security report in markdown format
+ * @param findings - Array of security findings to include in the report
+ * @returns Promise resolving to the generated report content
+ */
+async function generateReportContent(findings: SecurityFinding[]): Promise<string> {
+    let report = '# Security Scan Report\n\n';
+    report += `Generated on: ${new Date().toLocaleString()}\n\n`;
+    
+    if (findings.length === 0) {
+        report += '## No security issues found\n';
+        return report;
+    }
+
+    report += `## Summary\n\nTotal findings: ${findings.length}\n\n`;
+
+    // Group findings by pattern
+    const patternGroups = new Map<string, SecurityFinding[]>();
+    findings.forEach(finding => {
+        const findings = patternGroups.get(finding.name) || [];
+        findings.push(finding);
+        patternGroups.set(finding.name, findings);
+    });
+
+    // Add findings by pattern
+    for (const [patternName, patternFindings] of patternGroups.entries()) {
+        report += `## ${patternName}\n\n`;
+        report += `Found ${patternFindings.length} instance(s)\n\n`;
+
+        for (const finding of patternFindings) {
+            report += `### ${finding.name}\n\n`;
+            report += `**Location:** ${finding.file}:${finding.line}\n\n`;
+            report += `**Impact:** ${finding.description || 'No description available'}\n\n`;
+            
+            try {
+                const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(finding.file));
+                const lines = fileContent.toString().split('\n');
+                const startLine = Math.max(0, finding.line - 4);
+                const endLine = Math.min(lines.length - 1, finding.line + 2);
+                
+                report += '**Code Context:**\n\n```\n';
+                for (let i = startLine; i <= endLine; i++) {
+                    const linePrefix = i === finding.line - 1 ? '> ' : '  ';
+                    report += `${linePrefix}${i + 1}: ${lines[i]}\n`;
+                }
+                report += '```\n\n';
+            } catch (error) {
+                report += '**Error:** Could not read file content\n\n';
+            }
+        }
+    }
+
+    return report;
+}
+
+/**
+ * Creates a security report file and opens it
+ * @param findings - Array of security findings to include in the report
+ */
+async function createAndOpenReport(findings: SecurityFinding[]): Promise<void> {
+    try {
+        // Ensure we have a workspace folder
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            throw new Error('No workspace folder found');
+        }
+
+        // Create security-reports directory if it doesn't exist
+        const reportsDir = path.join(workspaceFolder.uri.fsPath, 'security-reports');
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+
+        // Generate filename with current date
+        const date = new Date().toISOString().split('T')[0];
+        const reportPath = path.join(reportsDir, `scan-report-${date}.md`);
+
+        // Generate and write report content
+        const reportContent = await generateReportContent(findings);
+        fs.writeFileSync(reportPath, reportContent);
+
+        // Open the report file
+        const doc = await vscode.workspace.openTextDocument(reportPath);
+        await vscode.window.showTextDocument(doc);
+
+        vscode.window.showInformationMessage('Security report generated successfully');
+    } catch (error) {
+        vscode.window.showErrorMessage('Error generating security report: ' + error);
+    }
+}
+
+/**
  * Activates the security scanner extension.
  * This is the main entry point of the extension that sets up:
  * - Tree view for security findings
@@ -223,8 +314,8 @@ export function activate(context: vscode.ExtensionContext) {
                 '.pdf', '.zip', '.tar', '.gz', '.7z', '.rar',
                 '.mp3', '.mp4', '.avi', '.mov', '.wmv',
                 '.ttf', '.otf', '.woff', '.woff2',
-                '.pyc', '.pyo', '.pyd',
-                '.so', '.dylib',
+                '.pyc', '.pyo', '.pyd', '.md',
+                '.so', '.resx', '.dylib',
                 '.class'
             ]);
 
@@ -288,6 +379,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(disposable);
+
+    // Register the report generation command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('security-scanner.generateReport', () => {
+            const findings = treeProvider.getFindings();
+            createAndOpenReport(findings);
+        })
+    );
 }
 
 /**

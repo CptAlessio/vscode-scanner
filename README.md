@@ -24,6 +24,11 @@ A Visual Studio Code extension that scans your codebase for potential security i
 - Light red background highlighting for easy identification
 - Persistent highlighting until the file is closed
 
+### 📄 Markdown Report Generation
+- After scanning your codebase, you can generate a detailed security report in markdown format.
+- The report summarizes the findings and provides context for each identified security issue.
+- Use the command palette (Ctrl+Shift+P / Cmd+Shift+P) and search for "Generate Security Report" to create the report after a scan is completed.
+
 ## Setup
 
 1. Install the extension in VS Code
@@ -35,4 +40,4 @@ A Visual Studio Code extension that scans your codebase for potential security i
 ### Security Scanner Settings
 The security ruleset is now accessible via **Preferences > Settings > Security Scanner** in Visual Studio Code. Users can customize their patterns for code detection, allowing for tailored security scanning based on specific project needs. 
 
-Additionally, a comprehensive ruleset is provided in the repository under `/pattern_library/settings.json`, which users can utilize out of the box to enhance their security scanning capabilities. 
+A comprehensive ruleset is provided in the repository under `/pattern_library/settings.json`, which users can utilize out of the box to enhance their security scanning capabilities. 
