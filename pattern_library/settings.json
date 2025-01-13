@@ -1,6 +1,13 @@
 {
     "editor.minimap.enabled": false,
-    "securityScanner.patterns": [           
+    "securityScanner.patterns": [
+
+        
+
+
+
+
+
         {
             "name": "Password Detection",
             "pattern": "(password|passwd|pwd).*[=:].+",
@@ -22,9 +29,9 @@
             "description": "Database connection strings often contain sensitive credentials. Exposing these in code can lead to unauthorized database access. Use secure configuration management and encrypt sensitive connection details."
         },
         {
-            "name": "Database Credentials",
+            "name": "Credentials detected",
             "pattern": "(user[-_]?name|user[-_]?id|db[-_]?user|database[-_]?user).*[=:].*",
-            "description": "Database credentials detected which can pose security risks if hardcoded in the source code. Ensure that database credentials are stored securely and not exposed in the codebase."
+            "description": "Credentials detected which can pose security risks if hardcoded in the source code. Ensure that credentials are stored securely and not exposed in the codebase."
         },
         {
             "name": "Webhook URLs",
@@ -532,11 +539,6 @@
             "description": "jQuery DOM manipulation methods can be vulnerable to XSS attacks. Always sanitize content before using these methods and consider using safer alternatives."
         },
         {
-            "name": "TypeScript Template Injection",
-            "pattern": "`.*\\$\\{.*\\}`",
-            "description": "Template literals with user input can lead to template injection vulnerabilities. Sanitize all variables used in template literals, especially when generating HTML or SQL queries."
-        },
-        {
             "name": "TypeScript Dangerous RegExp",
             "pattern": "new\\s+RegExp\\(|RegExp\\(",
             "description": "Dynamic RegExp creation with user input can lead to ReDoS (Regular Expression Denial of Service) attacks. Validate and limit the complexity of dynamic regular expressions."
@@ -690,6 +692,44 @@
             "name": "Insecure HTTP Usage",
             "pattern": "http://[^s]",
             "description": "Using non-secure HTTP protocol can expose data to man-in-the-middle attacks and eavesdropping. All network communications should use HTTPS to ensure data encryption in transit. Update URLs to use 'https://' instead of 'http://' and ensure proper certificate validation."
+        },
+        {
+            "name": "NoopHostnameVerifier detected",
+            "pattern": "new\\sNoopHostnameVerifier",
+            "description": "NoopHostnameVerifier detected"
+        },
+        {
+            "name": "HostnameVerifier detected",
+            "pattern": "HostnameVerifier\\s([a-zA-Z]*)\\s=\\s\\x28([a-zA-Z]*)\\x2c\\s([a-zA-Z]*)\\x29\\s\\x2d\\x3e\\strue",
+            "description": "HostnameVerifier detected"
+        },
+        {
+            "name": "PGP Private key detected",
+            "pattern": "-----BEGIN\\sPGP\\sPRIVATE\\sKEY\\sBLOCK-----",
+            "description": "PGP Private key detected"
+        },
+        {
+            "name": "Guava CacheBuilder detected",
+            "pattern": "CacheBuilder\\x2enewBuilder",
+            "description": "Guava CacheBuilder detected"
+        },
+        {
+            "name": "Java NullVerifier detected detected",
+            "pattern": "NullVerifier\\.getInstance",
+            "description": "NullVerifier detected"
+        },
+        {
+            "name": "Insecure SSL Mode",
+            "pattern": "SslMode\\.(Prefer|Disabled)",
+            "description": "Using SslMode.Prefer or SslMode.Disabled in database connections poses significant security risks. SslMode.Prefer falls back to unencrypted connections if SSL/TLS fails, while SslMode.Disabled completely disables encryption. This can expose sensitive data to man-in-the-middle attacks and eavesdropping. Always use SslMode.Required or SslMode.VerifyFull in production environments."
+        },
+        {
+            "name": "Hardcoded Static Credentials in Connection String",
+            "pattern": "Host=[^;]+;Database=[^;]+;Username=[^;]+;Password=[^;\\s]+",
+            "description": "Hardcoded DB connection string detected. Storing database credentials directly in code or configuration files is a security risk. These credentials could be exposed through version control or unauthorized access. Use Hashicorp Vault instead. This also indicate that the credentials are static and not dynamic."
         }
-    ]
+    ],
+    "editor.accessibilitySupport": "off",
+    "workbench.activityBar.orientation": "vertical",
+    "extensions.ignoreRecommendations": true
 }

@@ -1,13 +1,13 @@
 {
     "name": "vscode-scanner",
     "displayName": "Security Scanner",
-    "description": "Scan code for security patterns and vulnerabilities",
-    "version": "0.0.2",
+    "description": "A tool designed for security professionals to perform rapid security reviews of large codebases by identifying security-sensitive areas of the application.",
+    "version": "0.0.3",
     "engines": {
         "vscode": "^1.60.0"
     },
     "categories": [
-        "Security"
+        "Other"
     ],
     "activationEvents": [
         "onCommand:security-scanner.scanCode",
@@ -41,6 +41,11 @@
                 "command": "security-scanner.removePattern",
                 "title": "Remove Security Pattern",
                 "icon": "$(trash)"
+            },
+            {
+                "command": "security-scanner.copyFindingLocation",
+                "title": "Copy Finding Location",
+                "icon": "$(copy)"
             }
         ],
         "viewsContainers": {
@@ -90,6 +95,11 @@
                 {
                     "command": "security-scanner.removePattern",
                     "when": "view == securityScanner && viewItem == pattern",
+                    "group": "inline"
+                },
+                {
+                    "command": "security-scanner.copyFindingLocation",
+                    "when": "view == securityScanner && viewItem == finding",
                     "group": "inline"
                 }
             ]

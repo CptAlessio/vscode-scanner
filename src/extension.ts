@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { SecurityTreeProvider, SecurityFinding } from './securityTreeProvider';
+import { SecurityTreeProvider, SecurityFinding, SecurityFile } from './securityTreeProvider';
 
 /**
  * Represents a security pattern with a name, regex pattern, and description.
@@ -222,6 +222,15 @@ export function activate(context: vscode.ExtensionContext) {
                 await updateSecurityPatterns(updatedPatterns);
                 vscode.window.showInformationMessage(`Removed security pattern: ${selected.pattern.name}`);
             }
+        }),
+
+        // Register copy finding location command
+        vscode.commands.registerCommand('security-scanner.copyFindingLocation', async (item: SecurityFile) => {
+            if (item && item.finding) {
+                const location = `${item.finding.file}:${item.finding.line}`;
+                await vscode.env.clipboard.writeText(location);
+                vscode.window.showInformationMessage(`Copied location: ${location}`);
+            }
         })
     );
 
@@ -313,7 +322,7 @@ export function activate(context: vscode.ExtensionContext) {
                 '.jpg', '.jpeg', '.png', '.gif', '.ico', '.webp',
                 '.pdf', '.zip', '.tar', '.gz', '.7z', '.rar',
                 '.mp3', '.mp4', '.avi', '.mov', '.wmv',
-                '.ttf', '.otf', '.woff', '.woff2',
+                '.ttf', '.otf', '.woff', '.woff2', '.svg',
                 '.pyc', '.pyo', '.pyd', '.md',
                 '.so', '.resx', '.dylib',
                 '.class'
