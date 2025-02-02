@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Alessio Marziali
+ * Licensed under the MIT License.
+ */
+
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -324,8 +329,8 @@ export function activate(context: vscode.ExtensionContext) {
                 '.mp3', '.mp4', '.avi', '.mov', '.wmv',
                 '.ttf', '.otf', '.woff', '.woff2', '.svg',
                 '.pyc', '.pyo', '.pyd', '.md',
-                '.so', '.resx', '.dylib',
-                '.class'
+                '.so', '.resx', '.dylib', '.pdn', '.json', '.editorconfig',
+                '.class', '.rar'
             ]);
 
             // Scan each file

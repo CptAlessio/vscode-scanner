@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Alessio Marziali
+ * Licensed under the MIT License.
+ */
+
 import * as vscode from 'vscode';
 import * as path from 'path';
 

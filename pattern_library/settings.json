@@ -1,27 +1,15 @@
 {
     "editor.minimap.enabled": false,
     "securityScanner.patterns": [
-
-        
-
-
-
-
-
         {
-            "name": "Password Detection",
+            "name": "Password",
             "pattern": "(password|passwd|pwd).*[=:].+",
             "description": "Hardcoded passwords in code pose a significant security risk. Credentials should be stored securely in configuration management systems or secret vaults, not in source code where they can be exposed through version control or code access."
         },
         {
-            "name": "Token Detection",
-            "pattern": "(token).*[=:].+",
-            "description": "Authentication tokens found in code can lead to unauthorized access if exposed. These should be stored securely and rotated regularly. Hardcoded tokens in source code risk being exposed through version control or code access."
-        },
-        {
             "name": "API Keys and Tokens",
-            "pattern": "(api[-_]?key|access[-_]?token|auth[-_]?token|jwt|bearer).*[=:].*",
-            "description": "API keys and authentication tokens in code are high-risk security credentials. If exposed, they can grant unauthorized access to services and data. Store these in secure credential stores and use environment variables or secret management systems instead."
+            "pattern": "\\b(?:token|api[-_]?key|access[-_]?token|auth[-_]?token|jwt|bearer)\\b.*[:=].+",
+            "description": "Hardcoded API keys, tokens, and other authentication credentials found in source code can lead to unauthorized access and potential data breaches if exposed. Always store such sensitive credentials in secure vaults or environment variables and rotate them regularly to mitigate risks."
         },
         {
             "name": "Database Connection Strings",
@@ -29,7 +17,7 @@
             "description": "Database connection strings often contain sensitive credentials. Exposing these in code can lead to unauthorized database access. Use secure configuration management and encrypt sensitive connection details."
         },
         {
-            "name": "Credentials detected",
+            "name": "Credentials",
             "pattern": "(user[-_]?name|user[-_]?id|db[-_]?user|database[-_]?user).*[=:].*",
             "description": "Credentials detected which can pose security risks if hardcoded in the source code. Ensure that credentials are stored securely and not exposed in the codebase."
         },
@@ -59,9 +47,9 @@
             "description": "Detects OAuth-related configurations"
         },
         {
-            "name": "Environment Variables",
-            "pattern": "process\\.env[\\'|\\\"](.*?)[\\'\\\"]",
-            "description": "Identifies environment variable access"
+            "name": "Environment Variables Access",
+            "pattern": "(System\\.getenv\\(.*\\)|Environment\\.GetEnvironmentVariables\\(.*\\))",
+            "description": "Detects access to environment variables in code across multiple languages: Java's System.getenv(...) and C#'s Environment.GetEnvironmentVariable(...)."
         },
         {
             "name": "Certificate Paths",
@@ -74,9 +62,14 @@
             "description": "Identifies URL parameters that might be sensitive"
         },
         {
-            "name": "Command Execution",
-            "pattern": "(exec|execSync|spawn|spawnSync)\\s*\\(",
-            "description": "Dynamic command execution can lead to Remote Code Execution (RCE) vulnerabilities if user input is not properly sanitized. Attackers could inject malicious commands to execute arbitrary code on the system. Avoid using these methods with user-supplied input."
+            "name" : ".NET Process Execution",
+            "pattern": "Process\\.Start\\(|Process\\.Create\\(|Process\\.CreateProcessAsUser\\(|Process\\.CreateProcessAsUser\\(",
+            "description": "Process execution can lead to Remote Code Execution (RCE) vulnerabilities if user input is not properly sanitized."
+        },
+        {
+            "name" : "Java Process Execution",
+            "pattern": "Runtime\\.getRuntime\\(\\)\\.exec\\(.*\\)",
+            "description": "Process execution can lead to Remote Code Execution (RCE) vulnerabilities if user input is not properly sanitized."
         },
         {
             "name": "Encryption Keys",
@@ -87,11 +80,6 @@
             "name": "[PII] Email Addresses",
             "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
             "description": "[PII] Detect email addresses in the codebase"
-        },
-        {
-            "name": "OAuth Configurations",
-            "pattern": "(oauth|client[-_]?id|client[-_]?secret)\\s*[=:]\\s*.+",
-            "description": "Detects OAuth-related configurations"
         },
         {
             "name": "Vault Token",
@@ -164,9 +152,9 @@
             "description": "Identifies Java deserialization which can lead to remote code execution if not properly secured"
         },
         {
-            "name": "SQL Injection Risk",
+            "name": "SQL Statement",
             "pattern": "\"SELECT.*\\+|UPDATE.*\\+|DELETE.*\\+|INSERT.*\\+",
-            "description": "Detects potential SQL injection vulnerabilities in string concatenation"
+            "description": "Verify that the SQL statement is not vulnerable to SQL injection. If it is, use parameterized queries or prepared statements."
         },
         {
             "name": "Java System Exit",
@@ -174,14 +162,14 @@
             "description": "Identifies calls to System.exit() which can abruptly terminate the application"
         },
         {
-            "name": "Java File Operations",
-            "pattern": "(new\\s+File\\(|FileInputStream\\(|FileOutputStream\\()",
+            "name": "File Operations",
+            "pattern": "(?:new\\s+File\\(|FileInputStream\\(|FileOutputStream\\(|new\\s+StreamReader\\(|File\\.OpenText\\(|new\\s+StreamWriter\\(|File\\.CreateText\\())",
             "description": "Detects file operations that might need security review"
         },
         {
             "name": "Java Security Manager Modification",
             "pattern": "System\\.setSecurityManager\\(",
-            "description": "Identifies attempts to modify the Security Manager"
+            "description": "Modifying the Security Manager can undermine critical runtime security controls, which may allow unauthorized operations. Such alterations expose the system to potential exploitation by malicious code."
         },
         {
             "name": "Java Native Methods",
@@ -189,7 +177,7 @@
             "description": "Detects native method declarations which can be security sensitive"
         },
         {
-            "name": "Java Cipher Usage",
+            "name": "Java Cipher",
             "pattern": "Cipher\\.getInstance\\([\"']([^\"']+)[\"']\\)",
             "description": "Identifies cryptographic operations that might use weak algorithms"
         },
@@ -204,7 +192,7 @@
             "description": "Identifies security permission modifications and privileged actions"
         },
         {
-            "name": "Java Unsafe Usage",
+            "name": "Java Unsafe",
             "pattern": "sun\\.misc\\.Unsafe|jdk\\.internal\\.misc\\.Unsafe",
             "description": "Detects usage of Unsafe class which can bypass Java security mechanisms"
         },
@@ -244,34 +232,14 @@
             "description": "Identifies temporary file creation which might need proper cleanup"
         },
         {
-            "name": "XSS Vulnerability",
+            "name": "Potential XSS Sink",
             "pattern": "response\\.getWriter\\(\\)\\.print\\(.*\\)|response\\.getWriter\\(\\)\\.write\\(.*\\)",
-            "description": "Detects potential XSS vulnerabilities in servlet responses"
+            "description": "Identifies uses of response.getWriter().print() or write() that may output unsanitized user input. Such unescaped outputs can lead to cross-site scripting vulnerabilities if not properly handled."
         },
         {
             "name": "Java LDAP Injection",
             "pattern": "new\\s+InitialDirContext\\(|new\\s+InitialLdapContext\\(",
             "description": "Identifies LDAP operations that might be vulnerable to injection"
-        },
-        {
-            "name": "Java Path Traversal",
-            "pattern": "\\.getCanonicalPath\\(\\)|\\.getAbsolutePath\\(\\)",
-            "description": "Detects file path operations that might be vulnerable to path traversal"
-        },
-        {
-            "name": "ASP.NET Core AllowAnyOrigin CORS",
-            "pattern": "\\.AllowAnyOrigin\\(\\)",
-            "description": "Allowing any origin in CORS policy is extremely dangerous. This can expose your API to cross-site attacks from any domain. Malicious websites could make requests to your API using the user's credentials. Specify exact allowed origins instead."
-        },
-        {
-            "name": "ASP.NET Core AllowAnyMethod CORS",
-            "pattern": "\\.AllowAnyMethod\\(\\)",
-            "description": "Identifies permissive CORS policy that allows any HTTP method"
-        },
-        {
-            "name": "ASP.NET Core AllowAnyHeader CORS",
-            "pattern": "\\.AllowAnyHeader\\(\\)",
-            "description": "Detects permissive CORS policy that allows any header"
         },
         {
             "name": "SQL Statement manipulation",
@@ -334,7 +302,7 @@
             "description": "Detects usage of cryptographically weak hash algorithms"
         },
         {
-            "name": "Insecure Random",
+            "name": "Weak Random",
             "pattern": "new\\s+Random\\(|Random\\.Next",
             "description": "Identifies use of weak random number generation instead of cryptographic random"
         },
@@ -359,7 +327,7 @@
             "description": "Identifies redirects that might need validation against open redirect attacks"
         },
         {
-            "name": "ASP.NET Core ViewData Usage",
+            "name": "ASP.NET Core ViewData",
             "pattern": "ViewData\\[|ViewBag\\.",
             "description": "Detects ViewData/ViewBag usage which might need XSS protection"
         },
@@ -379,7 +347,7 @@
             "description": "Identifies process execution that might be security sensitive"
         },
         {
-            "name": "ASP.NET Core Reflection Usage",
+            "name": "ASP.NET Core Reflection",
             "pattern": "Assembly\\.Load|Type\\.GetType\\(|Activator\\.CreateInstance",
             "description": "Detects use of reflection which might bypass security controls"
         },
@@ -389,7 +357,7 @@
             "description": "Unsafe blocks in Rust bypass the compiler's safety guarantees. These blocks can lead to undefined behavior, memory corruption, or security vulnerabilities if not properly implemented. Review all unsafe code carefully and document why it's necessary."
         },
         {
-            "name": "Rust Raw Pointer Usage",
+            "name": "Rust Raw Pointer",
             "pattern": "\\*(?:mut|const)\\s+(?:[a-zA-Z_][a-zA-Z0-9_]*|\\()",
             "description": "Raw pointer dereferencing in Rust can lead to memory safety issues. Raw pointers bypass Rust's ownership and borrowing rules, potentially causing use-after-free, null pointer dereference, or buffer overflow vulnerabilities."
         },
@@ -469,7 +437,7 @@
             "description": "Unvalidated environment variables can lead to security issues. Validate and sanitize all environment variables, especially those affecting program behavior or paths."
         },
         {
-            "name": "Rust Temporary File Usage",
+            "name": "Rust Temporary File",
             "pattern": "std::env::temp_dir|tempfile::",
             "description": "Temporary file operations can be vulnerable to TOCTOU attacks. Ensure proper file permissions and cleanup, and consider using secure alternatives like tempfile crate with proper configurations."
         },
@@ -489,12 +457,12 @@
             "description": "Type assertions to 'any' bypass TypeScript's type checking. This can lead to runtime errors and potential security vulnerabilities. Use proper type definitions or type guards instead of bypassing the type system."
         },
         {
-            "name": "TypeScript eval Usage",
+            "name": "TypeScript eval",
             "pattern": "eval\\(|new\\s+Function\\(|setTimeout\\(['\"]|setInterval\\(['\"]",
             "description": "Dynamic code execution through eval() or similar functions is extremely dangerous. This can lead to code injection vulnerabilities if user input is involved. Avoid dynamic code execution and use safer alternatives."
         },
         {
-            "name": "TypeScript innerHTML Usage",
+            "name": "TypeScript innerHTML",
             "pattern": "\\.innerHTML\\s*=|\\.outerHTML\\s*=",
             "description": "Direct manipulation of innerHTML/outerHTML can lead to Cross-Site Scripting (XSS) vulnerabilities. Use safe DOM manipulation methods or sanitize HTML content before insertion. Consider using textContent for text-only content."
         },
@@ -514,7 +482,7 @@
             "description": "Math.random() is not cryptographically secure and should not be used for security-sensitive operations. Use crypto.getRandomValues() or a secure random number generator for cryptographic purposes."
         },
         {
-            "name": "TypeScript Dangerous Object Methods",
+            "name": "TypeScript Object Methods",
             "pattern": "Object\\.entries\\(|Object\\.keys\\(|Object\\.values\\(",
             "description": "These methods can expose sensitive object properties. When used with user-controlled objects, they might reveal internal properties. Ensure proper property filtering before exposing object data."
         },
@@ -524,12 +492,12 @@
             "description": "Using URL data without sanitization can lead to XSS or injection attacks. Always sanitize and validate URL-derived data before using it in your application."
         },
         {
-            "name": "TypeScript Insecure Postmessage",
+            "name": "TypeScript Postmessage",
             "pattern": "postMessage\\(|addEventListener\\(['\"]message['\"]",
             "description": "Improper postMessage handling can lead to cross-origin security vulnerabilities. Always verify the origin and sanitize message data in postMessage handlers."
         },
         {
-            "name": "TypeScript LocalStorage Usage",
+            "name": "TypeScript LocalStorage",
             "pattern": "localStorage\\.|sessionStorage\\.",
             "description": "Storing sensitive data in localStorage/sessionStorage can expose it to XSS attacks. Never store sensitive information like tokens or personal data in client-side storage."
         },
@@ -554,7 +522,7 @@
             "description": "Clipboard operations can expose sensitive data or be used for clipboard hijacking attacks. Implement proper security controls and user notifications for clipboard operations."
         },
         {
-            "name": "TypeScript WebSocket Usage",
+            "name": "TypeScript WebSocket",
             "pattern": "new\\s+WebSocket\\(|WebSocket\\(",
             "description": "Insecure WebSocket connections can expose data to man-in-the-middle attacks. Always use secure WebSocket (wss://) and validate the server certificate."
         },
@@ -564,12 +532,12 @@
             "description": "Requests without proper validation can lead to CSRF or injection attacks depending on the context, particularly if these values are used in SQL queries or other sensitive operations. Check if these values are validated to prevent injection attacks."
         },
         {
-            "name": ".NET StreamReader Usage",
+            "name": ".NET StreamReader",
             "pattern": "new\\s+StreamReader\\(|File\\.OpenText\\(|StreamReader\\.",
             "description": "StreamReader usage without proper disposal can lead to resource leaks and file handle exhaustion. Ensure proper use of 'using' statements and check for potential file path manipulation vulnerabilities."
         },
         {
-            "name": ".NET StreamWriter Usage",
+            "name": ".NET StreamWriter",
             "pattern": "new\\s+StreamWriter\\(|File\\.CreateText\\(|File\\.AppendText\\(|StreamWriter\\.",
             "description": "StreamWriter usage without proper disposal can lead to resource leaks and data corruption. Ensure proper use of 'using' statements and validate file paths to prevent path traversal attacks."
         },
@@ -585,7 +553,7 @@
         },
         {
             "name": "Base64 Encoding (JavaScript/TypeScript)",
-            "pattern": "btoa\\(|atob\\(|Buffer\\.from\\([^,]+,\\s*['\"](base64|base64url)['\"]\\)|toString\\(['\"](base64|base64url)['\"]\\)",
+            "pattern": "(?i)(?:Convert\\.ToBase64String|System\\.Convert\\.ToBase64String|Base64\\.getEncoder\\(\\)|btoa\\(|atob\\(|base64_encode|base64_decode|base64\\.(?:b64encode|b64decode))",
             "description": "Base64 encoding in JavaScript/TypeScript might expose sensitive data in client-side code. Avoid encoding sensitive information that could be visible in the browser."
         },
         {
@@ -629,7 +597,7 @@
             "description": "Improper synchronization can cause deadlocks or race conditions. Use higher-level concurrency utilities from java.util.concurrent when possible, and ensure proper lock ordering and timeout mechanisms."
         },
         {
-            "name": "Java Volatile Usage",
+            "name": "Java Volatile",
             "pattern": "volatile\\s+\\w+|AtomicInteger|AtomicLong|AtomicReference",
             "description": "Volatile variables and atomic operations need careful consideration for thread safety. Ensure proper usage for intended memory visibility and consider using higher-level concurrent collections or synchronization mechanisms."
         },
@@ -689,32 +657,32 @@
             "description": "Thread.sleep operations block the current thread and can lead to performance issues or deadlocks. Consider using scheduled executors, CompletableFuture.delayedExecutor, or other non-blocking alternatives. In GUI applications, use Platform.runLater or SwingUtilities.invokeLater for delays."
         },
         {
-            "name": "Insecure HTTP Usage",
+            "name": "Non HTTPS connection",
             "pattern": "http://[^s]",
             "description": "Using non-secure HTTP protocol can expose data to man-in-the-middle attacks and eavesdropping. All network communications should use HTTPS to ensure data encryption in transit. Update URLs to use 'https://' instead of 'http://' and ensure proper certificate validation."
         },
         {
-            "name": "NoopHostnameVerifier detected",
+            "name": "NoopHostnameVerifier",
             "pattern": "new\\sNoopHostnameVerifier",
             "description": "NoopHostnameVerifier detected"
         },
         {
-            "name": "HostnameVerifier detected",
+            "name": "HostnameVerifier",
             "pattern": "HostnameVerifier\\s([a-zA-Z]*)\\s=\\s\\x28([a-zA-Z]*)\\x2c\\s([a-zA-Z]*)\\x29\\s\\x2d\\x3e\\strue",
             "description": "HostnameVerifier detected"
         },
         {
-            "name": "PGP Private key detected",
+            "name": "PGP Private key",
             "pattern": "-----BEGIN\\sPGP\\sPRIVATE\\sKEY\\sBLOCK-----",
             "description": "PGP Private key detected"
         },
         {
-            "name": "Guava CacheBuilder detected",
+            "name": "Guava CacheBuilder",
             "pattern": "CacheBuilder\\x2enewBuilder",
             "description": "Guava CacheBuilder detected"
         },
         {
-            "name": "Java NullVerifier detected detected",
+            "name": "Java NullVerifier",
             "pattern": "NullVerifier\\.getInstance",
             "description": "NullVerifier detected"
         },
@@ -727,6 +695,51 @@
             "name": "Hardcoded Static Credentials in Connection String",
             "pattern": "Host=[^;]+;Database=[^;]+;Username=[^;]+;Password=[^;\\s]+",
             "description": "Hardcoded DB connection string detected. Storing database credentials directly in code or configuration files is a security risk. These credentials could be exposed through version control or unauthorized access. Use Hashicorp Vault instead. This also indicate that the credentials are static and not dynamic."
+        },
+        {
+            "name": "Databricks Personal Access Token",
+            "pattern": "(dapi[a-f0-9]{32}(?: -[0-9]+ )?)\b",
+            "description": "Databriks personal access token detected. This token is used to authenticate with Databricks API. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "Generic Secret",
+            "pattern": "secret.{0,20}\b([0-9a-z]{32,64})\b",
+            "description": "This is a generic secret detection pattern. It is used to detect secrets in the code. Verify if this is a valid secret or a false positive."
+        },
+        {
+            "name": "DockerHub access token",
+            "pattern": "dckr_pat_[a-zA-Z0-9_-]+\b",
+            "description": "DockerHub access token detected. This token is used to authenticate with DockerHub. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "Gitlab Runners Token",
+            "pattern": "glrt_[a-zA-Z0-9]+\b",
+            "description": "Gitlab Runners Token detected. This token is used to authenticate with Gitlab Runners. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "Gitlab Personal Access Token",
+            "pattern": "glpat-[a-zA-Z0-9]{20,27}\b",
+            "description": "Gitlab Personal Access Token detected. This token is used to authenticate with Gitlab. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "HTTP Basic Authentication",
+            "pattern": "Authorization:\\sBasic\\s+[a-zA-Z0-9+/]+={0,3}",
+            "description": "HTTP Basic Auth can expose credentials in transit if not used with HTTPS. It is vulnerable to interception and replay attacks."
+        },
+        {
+            "name": "JWT Token",
+            "pattern": "ey[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+",
+            "description": "JWT Token detected. This token is used to authenticate with a service. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "Kubernetes Bootstrap Token",
+            "pattern": "[a-z0-9]{6}\\.[a-z0-9]{16}",
+            "description": "Kubernetes Bootstrap Token detected. This token is used to bootstrap a new Kubernetes cluster. This token is a static token and not a dynamic token. This token is also not rotated and is a security risk."
+        },
+        {
+            "name": "ASP.NET Core Permissive CORS",
+            "pattern": "\\.AllowAny(?:Origin|Method|Header)\\(\\)",
+            "description": "Detects permissive CORS settings in ASP.NET Core that allow any origin, method, or header, which can expose your API to various attacks. Specify exact allowed values to improve security."
         }
     ],
     "editor.accessibilitySupport": "off",
